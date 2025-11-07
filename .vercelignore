@@ -1,0 +1,9 @@
+# Vercel
+.vercel
+.vercel/*
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.development
