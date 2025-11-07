@@ -1,6 +1,9 @@
 {
-  "name": "contractplan-template",
+  "name": "summitiq",
   "version": "1.0.0",
+  "description": "AI-Powered Meeting Assistant for Sales Professionals",
+  "author": "ContractPlan Inc",
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

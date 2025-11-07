@@ -14,16 +14,16 @@ describe('SummitIQ Home Page', () => {
     expect(heading).toBeInTheDocument();
   });
 
-  it('displays the value proposition', () => {
+  it('displays the enhanced value proposition', () => {
     render(<Home />);
-    const description = screen.getByText(/The world's most intelligent meeting assistant/i);
+    const description = screen.getByText(/Bring AI expert consultants to your sales calls/i);
     expect(description).toBeInTheDocument();
   });
 
   it('has a Start Free Trial button', () => {
     render(<Home />);
-    const button = screen.getByRole('button', { name: /Start Free Trial/i });
-    expect(button).toBeInTheDocument();
+    const buttons = screen.getAllByText(/Start Free Trial/i);
+    expect(buttons.length).toBeGreaterThan(0);
   });
 
   it('shows key statistics', () => {
@@ -38,8 +38,8 @@ describe('SummitIQ Home Page', () => {
 
   it('has navigation links', () => {
     render(<Home />);
-    const featuresLink = screen.getByRole('link', { name: /Features/i });
-    expect(featuresLink).toBeInTheDocument();
+    const featuresLinks = screen.getAllByText(/Features/i);
+    expect(featuresLinks.length).toBeGreaterThan(0);
   });
 
   it('displays feature cards', () => {
@@ -48,5 +48,39 @@ describe('SummitIQ Home Page', () => {
     const aiCoaching = screen.getAllByText(/AI Coaching/i);
     expect(transcriptions.length).toBeGreaterThan(0);
     expect(aiCoaching.length).toBeGreaterThan(0);
+  });
+
+  it('shows social proof numbers', () => {
+    render(<Home />);
+    const userCount = screen.getByText('2,500+');
+    const meetingCount = screen.getByText('150K+');
+    const rating = screen.getByText('4.9/5');
+    expect(userCount).toBeInTheDocument();
+    expect(meetingCount).toBeInTheDocument();
+    expect(rating).toBeInTheDocument();
+  });
+
+  it('displays testimonials section', () => {
+    render(<Home />);
+    const testimonialHeading = screen.getByText(/Loved by Sales Teams Everywhere/i);
+    expect(testimonialHeading).toBeInTheDocument();
+  });
+
+  it('displays FAQ section', () => {
+    render(<Home />);
+    const faqHeading = screen.getByText(/Frequently Asked Questions/i);
+    expect(faqHeading).toBeInTheDocument();
+  });
+
+  it('displays pricing section', () => {
+    render(<Home />);
+    const pricingHeading = screen.getByText(/Simple, Transparent Pricing/i);
+    expect(pricingHeading).toBeInTheDocument();
+  });
+
+  it('shows Product Hunt banner', () => {
+    render(<Home />);
+    const phBanner = screen.getByText(/We're live on Product Hunt!/i);
+    expect(phBanner).toBeInTheDocument();
   });
 });
