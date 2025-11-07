@@ -213,22 +213,30 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <Link href="/meetings/live" className="block bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
             <div className="text-4xl mb-3">🎙️</div>
             <div className="text-xl font-semibold mb-2">Start Live Meeting</div>
             <div className="text-blue-100 text-sm">Begin real-time transcription</div>
-          </button>
+          </Link>
+          <Link href="/meetings/prepare" className="block bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden">
+            <div className="absolute -top-2 -right-2 px-3 py-1 bg-yellow-400 text-purple-900 text-xs font-bold rounded-full transform rotate-12">
+              NEW!
+            </div>
+            <div className="text-4xl mb-3">🤖</div>
+            <div className="text-xl font-semibold mb-2">AI Expert Panel</div>
+            <div className="text-purple-100 text-sm">Add experts to your meetings</div>
+          </Link>
           <button className="bg-white text-gray-900 rounded-xl p-6 border-2 border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300">
             <div className="text-4xl mb-3">📅</div>
             <div className="text-xl font-semibold mb-2">Schedule Meeting</div>
             <div className="text-gray-600 text-sm">Set up your next call</div>
           </button>
-          <button className="bg-white text-gray-900 rounded-xl p-6 border-2 border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300">
+          <Link href="/analytics" className="block bg-white text-gray-900 rounded-xl p-6 border-2 border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300">
             <div className="text-4xl mb-3">📊</div>
             <div className="text-xl font-semibold mb-2">View Analytics</div>
             <div className="text-gray-600 text-sm">Check your performance</div>
-          </button>
+          </Link>
         </div>
 
         {/* Main Content Grid */}
