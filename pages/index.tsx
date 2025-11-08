@@ -1,10 +1,14 @@
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/router';
+import { useDemoMode } from '../contexts/DemoContext';
 
 export default function Home() {
   const [email, setEmail] = useState('');
   const [showVideo, setShowVideo] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { enterDemoMode } = useDemoMode();
+  const router = useRouter();
 
   const handleGetStarted = (e: React.FormEvent) => {
     e.preventDefault();
@@ -13,6 +17,15 @@ export default function Home() {
       (window as any).gtag('event', 'sign_up_start', { method: 'email' });
     }
     window.location.href = '/dashboard';
+  };
+
+  const handleTryDemo = () => {
+    // Track demo start
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'demo_start', { method: 'button' });
+    }
+    enterDemoMode();
+    router.push('/dashboard');
   };
 
   const testimonials = [
@@ -184,7 +197,7 @@ export default function Home() {
             Your AI co-pilot for every sales call. Open on your laptop or mobile during Zoom, Teams, or any meeting — get real-time expert recommendations only you can see.
           </p>
 
-          <form onSubmit={handleGetStarted} className="max-w-md mx-auto mb-8">
+          <form onSubmit={handleGetStarted} className="max-w-md mx-auto mb-4">
             <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="email"
@@ -205,6 +218,19 @@ export default function Home() {
               ✓ 14-day free trial • ✓ No credit card required • ✓ Cancel anytime
             </p>
           </form>
+
+          {/* Demo CTA */}
+          <div className="text-center mb-8">
+            <button
+              onClick={handleTryDemo}
+              className="px-8 py-3 border-2 border-blue-600 text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-all duration-300"
+            >
+              🎮 Try Interactive Demo
+            </button>
+            <p className="text-sm text-gray-500 mt-2">
+              Explore all features • No signup required • Resets on close
+            </p>
+          </div>
 
           {/* Social Proof */}
           <div className="flex items-center justify-center space-x-8 mb-8">

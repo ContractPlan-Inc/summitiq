@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/router';
+import { useDemoMode } from '../contexts/DemoContext';
 
 interface Meeting {
   id: string;
@@ -22,6 +24,13 @@ interface ActionItem {
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'meetings' | 'actions' | 'analytics'>('overview');
+  const { isDemoMode, exitDemoMode } = useDemoMode();
+  const router = useRouter();
+
+  const handleExitDemo = () => {
+    exitDemoMode();
+    router.push('/');
+  };
 
   const upcomingMeetings: Meeting[] = [
     {
@@ -182,6 +191,37 @@ export default function Dashboard() {
           </div>
         </div>
       </nav>
+
+      {/* Demo Mode Banner */}
+      {isDemoMode && (
+        <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white py-3">
+          <div className="container mx-auto px-6 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <span className="text-2xl">🎮</span>
+              <div>
+                <div className="font-bold">Demo Mode Active</div>
+                <div className="text-sm text-orange-100">
+                  You're exploring a fully-featured demo. All data resets when you leave.
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={handleExitDemo}
+                className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-sm font-semibold"
+              >
+                Exit Demo
+              </button>
+              <Link
+                href="/"
+                className="px-4 py-2 bg-white text-orange-600 hover:bg-orange-50 rounded-lg transition-colors text-sm font-semibold"
+              >
+                Sign Up for Real
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="container mx-auto px-6 py-8">
