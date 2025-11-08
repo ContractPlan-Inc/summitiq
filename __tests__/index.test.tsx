@@ -16,7 +16,7 @@ describe('SummitIQ Home Page', () => {
 
   it('displays the enhanced value proposition', () => {
     render(<Home />);
-    const description = screen.getByText(/Bring AI expert consultants to your sales calls/i);
+    const description = screen.getByText(/Your AI co-pilot for every sales call/i);
     expect(description).toBeInTheDocument();
   });
 

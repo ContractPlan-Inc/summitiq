@@ -181,8 +181,7 @@ export default function Home() {
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Bring AI expert consultants to your sales calls. Get real-time coaching,
-            instant answers, and automated follow-ups that close more deals.
+            Your AI co-pilot for every sales call. Open on your laptop or mobile during Zoom, Teams, or any meeting — get real-time expert recommendations only you can see.
           </p>
 
           <form onSubmit={handleGetStarted} className="max-w-md mx-auto mb-8">
@@ -261,20 +260,74 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Grid remains the same */}
-      <section className="container mx-auto px-6 py-12 bg-white/50 rounded-3xl">
+      {/* How It Works - New Section */}
+      <section className="container mx-auto px-6 py-20 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">How SummitIQ Works</h2>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Your personal AI assistant that runs on your device during every sales call
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="bg-white rounded-2xl p-8 shadow-lg text-center">
+            <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white font-bold text-2xl">
+              1
+            </div>
+            <h3 className="text-xl font-bold mb-4">Open on Your Device</h3>
+            <p className="text-gray-600 leading-relaxed">
+              Launch SummitIQ on your laptop or mobile before your Zoom, Teams, or Google Meet call. It runs alongside your video app.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-8 shadow-lg text-center">
+            <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white font-bold text-2xl">
+              2
+            </div>
+            <h3 className="text-xl font-bold mb-4">AI Listens & Coaches</h3>
+            <p className="text-gray-600 leading-relaxed">
+              During your meeting, AI experts analyze the conversation and give you real-time suggestions only you can see on your screen.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-8 shadow-lg text-center">
+            <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white font-bold text-2xl">
+              3
+            </div>
+            <h3 className="text-xl font-bold mb-4">Close More Deals</h3>
+            <p className="text-gray-600 leading-relaxed">
+              Get instant answers to objections, perfect follow-up suggestions, and automated meeting summaries sent to your CRM.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-12 max-w-3xl mx-auto bg-white rounded-2xl p-8 border-2 border-blue-200">
+          <div className="flex items-start space-x-4">
+            <div className="text-4xl">💡</div>
+            <div>
+              <h4 className="text-xl font-bold mb-2">Your Secret Weapon</h4>
+              <p className="text-gray-700 leading-relaxed">
+                SummitIQ is invisible to your prospects. It's like having a team of expert coaches sitting next to you, feeding you the perfect thing to say at the perfect moment — but only you can see their recommendations on your screen.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Grid */}
+      <section className="container mx-auto px-6 py-12">
         <div className="grid grid-cols-3 gap-8 max-w-3xl mx-auto text-center">
           <div>
             <div className="text-4xl font-bold text-blue-600 mb-2">43%</div>
-            <div className="text-gray-600">More Follow-ups</div>
+            <div className="text-gray-600">Higher Close Rate</div>
           </div>
           <div>
             <div className="text-4xl font-bold text-blue-600 mb-2">2.3x</div>
-            <div className="text-gray-600">Deal Velocity</div>
+            <div className="text-gray-600">Meeting ROI</div>
           </div>
           <div>
             <div className="text-4xl font-bold text-blue-600 mb-2">31%</div>
-            <div className="text-gray-600">Shorter Cycles</div>
+            <div className="text-gray-600">Time Saved</div>
           </div>
         </div>
       </section>
@@ -296,9 +349,9 @@ export default function Home() {
             <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
               <span className="text-3xl">🎙️</span>
             </div>
-            <h3 className="text-2xl font-bold mb-4">Real-Time Transcription</h3>
+            <h3 className="text-2xl font-bold mb-4">Live Meeting Transcription</h3>
             <p className="text-gray-600 leading-relaxed">
-              AI-powered speech-to-text with speaker identification. Never miss a word or detail.
+              Watch your conversation transcribed in real-time on your screen. Scroll back to review what was said, copy exact quotes, and stay focused on the prospect.
             </p>
           </div>
 
@@ -311,7 +364,7 @@ export default function Home() {
             </div>
             <h3 className="text-2xl font-bold mb-4">AI Expert Panel</h3>
             <p className="text-gray-600 leading-relaxed">
-              Bring virtual expert consultants to your calls. Get instant answers and recommendations in real-time.
+              Invite AI experts to every call. They listen and whisper suggestions only you can see — like having consultants in your ear during meetings.
             </p>
           </div>
 
@@ -319,9 +372,9 @@ export default function Home() {
             <div className="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center mb-6">
               <span className="text-3xl">💡</span>
             </div>
-            <h3 className="text-2xl font-bold mb-4">AI Coaching</h3>
+            <h3 className="text-2xl font-bold mb-4">Real-Time AI Coaching</h3>
             <p className="text-gray-600 leading-relaxed">
-              Get real-time suggestions and best practices during your meetings to handle objections.
+              See suggestions pop up on your screen as you talk. Perfect responses to objections, pricing guidance, and next-step recommendations appear when you need them.
             </p>
           </div>
 
@@ -627,14 +680,17 @@ export default function Home() {
             >
               ✕ Close
             </button>
-            <div className="aspect-video bg-gray-900 rounded-lg overflow-hidden">
-              <iframe
-                className="w-full h-full"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-                title="SummitIQ Demo"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
+            <div className="aspect-video bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg overflow-hidden flex items-center justify-center">
+              <div className="text-center p-8">
+                <div className="text-6xl mb-4">🎬</div>
+                <h3 className="text-3xl font-bold text-white mb-4">Demo Video Coming Soon</h3>
+                <p className="text-blue-100 text-lg mb-6">
+                  We're creating an amazing demo to show you how SummitIQ transforms your sales calls.
+                </p>
+                <p className="text-sm text-blue-200">
+                  Sign up for early access to see it first!
+                </p>
+              </div>
             </div>
           </div>
         </div>
