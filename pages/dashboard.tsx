@@ -227,8 +227,14 @@ export default function Dashboard() {
       <div className="container mx-auto px-6 py-8">
         {/* Welcome Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, John!</h1>
-          <p className="text-gray-600">Here's what's happening with your meetings today</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {isDemoMode ? 'Welcome to SummitIQ Demo!' : 'Welcome back!'}
+          </h1>
+          <p className="text-gray-600">
+            {isDemoMode
+              ? 'Exploring sample data - Try all features with this interactive demo'
+              : "Here's what's happening with your meetings today"}
+          </p>
         </div>
 
         {/* Stats Grid */}

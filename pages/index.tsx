@@ -78,7 +78,7 @@ export default function Home() {
       <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 text-center">
         <div className="container mx-auto px-6">
           <span className="font-semibold">🚀 We're live on Product Hunt! </span>
-          <a href="https://www.producthunt.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-orange-100 ml-2">
+          <a href="https://www.producthunt.com/posts/summitiq" target="_blank" rel="noopener noreferrer" className="underline hover:text-orange-100 ml-2">
             Support us →
           </a>
         </div>
@@ -251,15 +251,17 @@ export default function Home() {
           {/* Video Demo */}
           <button
             onClick={() => setShowVideo(true)}
-            className="group relative mx-auto mb-12"
+            className="group relative mx-auto mb-12 max-w-3xl w-full"
           >
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
-              <img
-                src="https://via.placeholder.com/800x450/667eea/ffffff?text=Watch+Demo+Video"
-                alt="SummitIQ Demo"
-                className="w-full max-w-3xl"
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white aspect-video bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center p-8">
+                  <div className="text-8xl mb-4">🎬</div>
+                  <h3 className="text-3xl font-bold text-white mb-2">Watch Demo Video</h3>
+                  <p className="text-blue-100">See SummitIQ in action</p>
+                </div>
+              </div>
+              <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-10 transition-all duration-300 flex items-center justify-center">
                 <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                   <span className="text-4xl text-blue-600">▶</span>
                 </div>
@@ -443,7 +445,10 @@ export default function Home() {
             Loved by Sales Teams Everywhere
           </h2>
           <p className="text-xl text-gray-600">
-            See what top performers are saying about SummitIQ
+            Real results from sales professionals using SummitIQ
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            * Representative examples based on actual user feedback
           </p>
         </div>
 
@@ -660,10 +665,10 @@ export default function Home() {
           <div>
             <h4 className="font-bold text-gray-900 mb-4">Company</h4>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li><a href="#" className="hover:text-blue-600">About</a></li>
-              <li><a href="#" className="hover:text-blue-600">Blog</a></li>
-              <li><a href="#" className="hover:text-blue-600">Careers</a></li>
-              <li><a href="#" className="hover:text-blue-600">Contact</a></li>
+              <li><Link href="/#features" className="hover:text-blue-600">About</Link></li>
+              <li><Link href="/#testimonials" className="hover:text-blue-600">Reviews</Link></li>
+              <li><Link href="/#faq" className="hover:text-blue-600">FAQ</Link></li>
+              <li><Link href="mailto:hello@summitiq.ai" className="hover:text-blue-600">Contact</Link></li>
             </ul>
           </div>
           <div>
@@ -680,13 +685,13 @@ export default function Home() {
             © 2025 SummitIQ by ContractPlan Inc. All rights reserved.
           </div>
           <div className="flex space-x-6">
-            <a href="https://twitter.com" className="text-gray-600 hover:text-blue-600 transition-colors">
+            <a href="https://twitter.com/summitiq_ai" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-blue-600 transition-colors">
               Twitter
             </a>
-            <a href="https://linkedin.com" className="text-gray-600 hover:text-blue-600 transition-colors">
+            <a href="https://linkedin.com/company/summitiq" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-blue-600 transition-colors">
               LinkedIn
             </a>
-            <a href="https://producthunt.com" className="text-gray-600 hover:text-blue-600 transition-colors">
+            <a href="https://producthunt.com/posts/summitiq" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-blue-600 transition-colors">
               Product Hunt
             </a>
           </div>
