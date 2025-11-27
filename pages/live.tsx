@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import Layout from '../components/Layout'
-import { getKnowledge } from '../lib/store'
-import { KnowledgeItem } from '../lib/expert'
+import Layout from '@/components/Layout'
+import { useOrganization } from '@clerk/nextjs'
 
 type Mode = 'directed' | 'interjection'
 type Status = 'idle' | 'listening' | 'thinking' | 'speaking'
@@ -13,34 +12,26 @@ interface Utterance {
 }
 
 export default function Live() {
+  const { organization, isLoaded: orgLoaded } = useOrganization()
   const [isLive, setIsLive] = useState(false)
   const [mode, setMode] = useState<Mode>('directed')
   const [status, setStatus] = useState<Status>('idle')
   const [utterances, setUtterances] = useState<Utterance[]>([])
   const [currentTranscript, setCurrentTranscript] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [knowledge, setKnowledge] = useState<KnowledgeItem[]>([])
   const [conversationHistory, setConversationHistory] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([])
 
-  const recognitionRef = useRef<any>(null)
+  const recognitionRef = useRef<SpeechRecognition | null>(null)
   const synthRef = useRef<SpeechSynthesis | null>(null)
   const isLiveRef = useRef(isLive)
 
-  // Keep ref in sync with state
   useEffect(() => {
     isLiveRef.current = isLive
   }, [isLive])
 
-  // Load knowledge on mount
-  useEffect(() => {
-    setKnowledge(getKnowledge())
-  }, [])
-
-  // Initialize speech synthesis
   useEffect(() => {
     if (typeof window !== 'undefined') {
       synthRef.current = window.speechSynthesis
-      // Load voices
       window.speechSynthesis.getVoices()
     }
   }, [])
@@ -68,7 +59,7 @@ export default function Live() {
     utterance.onend = () => {
       setStatus('listening')
       if (recognitionRef.current && isLiveRef.current) {
-        try { recognitionRef.current.start() } catch (e) {}
+        try { recognitionRef.current.start() } catch (e) { /* ignore */ }
       }
     }
 
@@ -83,7 +74,6 @@ export default function Live() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: question,
-          knowledge,
           context: { mode: 'live' },
           conversationHistory,
         }),
@@ -96,7 +86,6 @@ export default function Live() {
 
       const data = await response.json()
 
-      // Update conversation history
       setConversationHistory(prev => [
         ...prev,
         { role: 'user', content: question },
@@ -104,11 +93,11 @@ export default function Live() {
       ])
 
       return data.response
-    } catch (err: any) {
+    } catch (err) {
       console.error('Expert API error:', err)
       return "I'm having trouble connecting right now. Give me a moment and try again."
     }
-  }, [knowledge, conversationHistory])
+  }, [conversationHistory])
 
   const processUtterance = useCallback(async (transcript: string) => {
     const lower = transcript.toLowerCase().trim()
@@ -120,7 +109,6 @@ export default function Live() {
       return
     }
 
-    // Extract the actual question
     let question = transcript
     wakeWords.forEach(w => {
       question = question.replace(new RegExp(w, 'gi'), '').trim()
@@ -129,7 +117,6 @@ export default function Live() {
 
     if (question.length < 3) return
 
-    // Log what we heard
     setUtterances(prev => [...prev, {
       role: 'customer',
       content: transcript,
@@ -138,15 +125,12 @@ export default function Live() {
 
     setStatus('thinking')
 
-    // Stop listening while processing
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop() } catch (e) {}
+      try { recognitionRef.current.stop() } catch (e) { /* ignore */ }
     }
 
-    // Get real AI response
     const response = await callExpert(question)
 
-    // Log and speak
     setUtterances(prev => [...prev, {
       role: 'summit',
       content: response,
@@ -159,14 +143,14 @@ export default function Live() {
   const startListening = useCallback(() => {
     if (typeof window === 'undefined') return
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
 
-    if (!SpeechRecognition) {
+    if (!SpeechRecognitionAPI) {
       setError('Speech recognition not supported in this browser. Try Chrome on desktop.')
       return
     }
 
-    const recognition = new SpeechRecognition()
+    const recognition = new SpeechRecognitionAPI()
     recognition.continuous = true
     recognition.interimResults = true
     recognition.lang = 'en-US'
@@ -176,7 +160,7 @@ export default function Live() {
       setError(null)
     }
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       let finalTranscript = ''
       let interimTranscript = ''
 
@@ -197,7 +181,7 @@ export default function Live() {
       }
     }
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       if (event.error === 'no-speech' || event.error === 'aborted') {
         return
       }
@@ -211,7 +195,7 @@ export default function Live() {
       if (isLiveRef.current) {
         setTimeout(() => {
           if (isLiveRef.current && recognitionRef.current) {
-            try { recognitionRef.current.start() } catch (e) {}
+            try { recognitionRef.current.start() } catch (e) { /* ignore */ }
           }
         }, 100)
       }
@@ -222,8 +206,6 @@ export default function Live() {
   }, [processUtterance])
 
   const goLive = () => {
-    // Reload knowledge in case it changed
-    setKnowledge(getKnowledge())
     setConversationHistory([])
     setIsLive(true)
     setUtterances([{
@@ -240,7 +222,7 @@ export default function Live() {
     setIsLive(false)
     setStatus('idle')
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop() } catch (e) {}
+      try { recognitionRef.current.stop() } catch (e) { /* ignore */ }
       recognitionRef.current = null
     }
     if (synthRef.current) {
@@ -257,7 +239,7 @@ export default function Live() {
   useEffect(() => {
     return () => {
       if (recognitionRef.current) {
-        try { recognitionRef.current.stop() } catch (e) {}
+        try { recognitionRef.current.stop() } catch (e) { /* ignore */ }
       }
       if (synthRef.current) {
         synthRef.current.cancel()
@@ -265,18 +247,35 @@ export default function Live() {
     }
   }, [])
 
-  const statusColors = {
+  const statusColors: Record<Status, string> = {
     idle: 'bg-white/20',
     listening: 'bg-green-500',
     thinking: 'bg-mustard animate-pulse',
     speaking: 'bg-mustard'
   }
 
-  const statusText = {
+  const statusText: Record<Status, string> = {
     idle: 'Ready',
     listening: 'Listening',
     thinking: 'Thinking',
     speaking: 'Speaking'
+  }
+
+  if (!orgLoaded) {
+    return <Layout><div className="max-w-4xl mx-auto px-6 py-8 text-white/60">Loading...</div></Layout>
+  }
+
+  if (!organization) {
+    return (
+      <Layout>
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <div className="card text-center py-12">
+            <h2 className="text-xl font-semibold mb-4">Organization Required</h2>
+            <p className="text-white/60">Select or create an organization to use Live mode.</p>
+          </div>
+        </div>
+      </Layout>
+    )
   }
 
   return (
@@ -322,13 +321,6 @@ export default function Live() {
                 </button>
               </div>
             </div>
-
-            {knowledge.length === 0 && (
-              <div className="bg-mustard/10 border border-mustard/30 px-4 py-3 mb-6 text-sm">
-                <strong>No knowledge loaded.</strong> Summit will give general guidance.{' '}
-                <a href="/knowledge" className="text-mustard underline">Add your products and playbooks</a> for specific expertise.
-              </div>
-            )}
 
             {error && (
               <div className="bg-red-500/20 border border-red-500/40 text-red-200 px-4 py-3 mb-6">

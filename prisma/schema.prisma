@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Organization {
+  id              String   @id @default(cuid())
+  clerkOrgId      String   @unique
+  name            String
+  slug            String   @unique
+  stripeCustomerId String?
+  stripePriceId    String?
+  plan            Plan     @default(STARTER)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  users           User[]
+  knowledgeItems  KnowledgeItem[]
+  documents       Document[]
+  sessions        Session[]
+  integrations    Integration[]
+}
+
+model User {
+  id             String   @id @default(cuid())
+  clerkUserId    String   @unique
+  email          String
+  name           String?
+  role           Role     @default(MEMBER)
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sessions       Session[]
+}
+
+model KnowledgeItem {
+  id             String          @id @default(cuid())
+  organizationId String
+  type           KnowledgeType
+  title          String
+  content        String          @db.Text
+  source         KnowledgeSource @default(MANUAL)
+  embedding      Float[]?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([type])
+}
+
+model Document {
+  id             String         @id @default(cuid())
+  organizationId String
+  filename       String
+  s3Key          String
+  mimeType       String
+  size           Int
+  processed      Boolean        @default(false)
+  chunks         Json?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model Session {
+  id             String      @id @default(cuid())
+  userId         String
+  organizationId String
+  mode           SessionMode
+  context        Json?
+  transcript     Json?
+  summary        String?     @db.Text
+  startedAt      DateTime    @default(now())
+  endedAt        DateTime?
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([organizationId])
+}
+
+model Integration {
+  id             String          @id @default(cuid())
+  organizationId String
+  type           IntegrationType
+  name           String
+  credentials    Json?
+  config         Json?
+  lastSyncAt     DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, type])
+}
+
+enum Plan {
+  STARTER
+  PRO
+  BUSINESS
+  ENTERPRISE
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum KnowledgeType {
+  PRODUCT
+  CUSTOMER
+  COMPETITOR
+  PLAYBOOK
+}
+
+enum KnowledgeSource {
+  MANUAL
+  CATALOG
+  DOCUMENT
+  CRM
+  INTEGRATION
+}
+
+enum SessionMode {
+  PREP
+  LIVE
+}
+
+enum IntegrationType {
+  SALESFORCE
+  HUBSPOT
+  WMS
+  CATALOG
+  CUSTOM
+}

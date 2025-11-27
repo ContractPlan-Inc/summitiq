@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react'
-import Layout from '../components/Layout'
-import { getKnowledge } from '../lib/store'
-import { KnowledgeItem } from '../lib/expert'
+import React, { useState } from 'react'
+import Layout from '@/components/Layout'
+import { useOrganization } from '@clerk/nextjs'
 
 interface Message {
   role: 'user' | 'expert'
@@ -9,6 +8,7 @@ interface Message {
 }
 
 export default function Prep() {
+  const { organization, isLoaded: orgLoaded } = useOrganization()
   const [context, setContext] = useState({
     customer: '',
     customerType: '',
@@ -19,12 +19,7 @@ export default function Prep() {
   const [input, setInput] = useState('')
   const [started, setStarted] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [knowledge, setKnowledge] = useState<KnowledgeItem[]>([])
   const [conversationHistory, setConversationHistory] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([])
-
-  useEffect(() => {
-    setKnowledge(getKnowledge())
-  }, [])
 
   const startSession = async () => {
     if (!context.customer || !context.product) return
@@ -40,7 +35,6 @@ export default function Prep() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: setupMessage,
-          knowledge,
           context: { mode: 'prep', ...context },
           conversationHistory: [],
         }),
@@ -78,7 +72,6 @@ export default function Prep() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: userMessage,
-          knowledge,
           context: { mode: 'prep', ...context },
           conversationHistory,
         }),
@@ -115,6 +108,23 @@ export default function Prep() {
     setMessages([])
     setConversationHistory([])
     setContext({ customer: '', customerType: '', product: '', goal: '' })
+  }
+
+  if (!orgLoaded) {
+    return <Layout><div className="max-w-4xl mx-auto px-6 py-8 text-white/60">Loading...</div></Layout>
+  }
+
+  if (!organization) {
+    return (
+      <Layout>
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <div className="card text-center py-12">
+            <h2 className="text-xl font-semibold mb-4">Organization Required</h2>
+            <p className="text-white/60">Select or create an organization to start using Prep mode.</p>
+          </div>
+        </div>
+      </Layout>
+    )
   }
 
   return (
@@ -179,13 +189,6 @@ export default function Prep() {
                   onChange={(e) => setContext({ ...context, goal: e.target.value })}
                 />
               </div>
-
-              {knowledge.length === 0 && (
-                <div className="bg-mustard/10 border border-mustard/30 px-4 py-3 text-sm">
-                  <strong>No knowledge loaded.</strong> Summit will give general coaching.{' '}
-                  <a href="/knowledge" className="text-mustard underline">Add your products and playbooks</a> for tailored prep.
-                </div>
-              )}
 
               <button
                 onClick={startSession}

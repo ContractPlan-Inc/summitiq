@@ -1,6 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import Anthropic from '@anthropic-ai/sdk'
-import { buildSystemPrompt, KnowledgeItem, ConversationContext } from '../../lib/expert'
+import { getAuth } from '@clerk/nextjs/server'
+import { prisma } from '@/lib/db'
+import { buildSystemPrompt, ConversationContext } from '@/lib/expert'
 
 const anthropic = new Anthropic()
 
@@ -13,23 +15,38 @@ export default async function handler(
   }
 
   try {
-    const {
-      message,
-      knowledge = [],
-      context = { mode: 'live' },
-      conversationHistory = [],
-    } = req.body as {
-      message: string
-      knowledge?: KnowledgeItem[]
-      context?: ConversationContext
-      conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>
+    const { userId, orgId } = getAuth(req)
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' })
     }
+
+    const { message, context = { mode: 'live' }, conversationHistory = [] } = req.body
 
     if (!message) {
       return res.status(400).json({ error: 'Message is required' })
     }
 
-    const systemPrompt = buildSystemPrompt(knowledge, context)
+    // Get knowledge from database if org exists
+    let knowledge: any[] = []
+    if (orgId) {
+      const org = await prisma.organization.findUnique({
+        where: { clerkOrgId: orgId },
+      })
+
+      if (org) {
+        const items = await prisma.knowledgeItem.findMany({
+          where: { organizationId: org.id },
+        })
+        knowledge = items.map((item: { type: string; title: string; content: string }) => ({
+          type: item.type.toLowerCase(),
+          title: item.title,
+          content: item.content,
+        }))
+      }
+    }
+
+    const systemPrompt = buildSystemPrompt(knowledge, context as ConversationContext)
 
     // Build message history
     const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [
