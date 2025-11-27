@@ -12,10 +12,10 @@ export default function Home() {
 
       <section className="px-6 py-24 max-w-2xl">
         <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-8">
-          Contract management software.
+          An expert in every sales call.
         </h1>
         <p className="text-xl mb-12 max-w-lg">
-          You sign contracts. We help you track them, find them, and not forget about them. That's it.
+          Set your phone on the table. SummitIQ listens, answers questions, and knows your products cold. Your salespeople never walk in alone again.
         </p>
         <a
           href="/dashboard"
@@ -27,27 +27,39 @@ export default function Home() {
 
       <section className="px-6 py-16 border-t border-black/20">
         <div className="max-w-4xl">
-          <h2 className="text-2xl font-bold mb-8">What you get:</h2>
+          <h2 className="text-2xl font-bold mb-8">How it works:</h2>
           <ul className="space-y-4 text-lg">
-            <li>→ A place to store contracts</li>
-            <li>→ Search that actually works</li>
-            <li>→ Alerts before things expire</li>
-            <li>→ Reports when you need them</li>
+            <li>→ Salesperson opens SummitIQ on their phone or iPad</li>
+            <li>→ Sets it on the table during the meeting</li>
+            <li>→ AI expert listens and joins when needed</li>
+            <li>→ Answers technical questions, makes recommendations, knows the specs</li>
           </ul>
         </div>
       </section>
 
       <section className="px-6 py-16 border-t border-black/20">
         <div className="max-w-4xl">
-          <h2 className="text-2xl font-bold mb-4">What you don't get:</h2>
-          <p className="text-lg text-black/70">
-            AI buzzwords. Blockchain. "Revolutionary" anything. We're not pretending to be more than we are.
+          <h2 className="text-2xl font-bold mb-8">What else it does:</h2>
+          <ul className="space-y-4 text-lg">
+            <li>→ Takes notes so your rep can focus on the conversation</li>
+            <li>→ Sets follow-up reminders</li>
+            <li>→ Pulls from your product databases, specs, and systems</li>
+            <li>→ Deep expertise in whatever specialty you need</li>
+          </ul>
+        </div>
+      </section>
+
+      <section className="px-6 py-16 border-t border-black/20">
+        <div className="max-w-4xl">
+          <h2 className="text-2xl font-bold mb-4">The real problem this solves:</h2>
+          <p className="text-lg text-black/80">
+            Your best salespeople aren't always your most technical. Your most technical people aren't always available. Now every rep has backup.
           </p>
         </div>
       </section>
 
       <footer className="px-6 py-8 border-t border-black/20 text-sm text-black/60">
-        <p>SummitIQ — Contract management software</p>
+        <p>SummitIQ — Expert on demand</p>
       </footer>
     </main>
   );
