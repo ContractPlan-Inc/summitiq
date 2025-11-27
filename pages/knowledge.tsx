@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
+import { getKnowledge, saveKnowledge } from '../lib/store'
 
 interface KnowledgeItem {
   id: string
@@ -10,6 +11,26 @@ interface KnowledgeItem {
 
 export default function Knowledge() {
   const [items, setItems] = useState<KnowledgeItem[]>([])
+  const [loaded, setLoaded] = useState(false)
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const stored = getKnowledge()
+    // Add IDs if missing (for backwards compatibility)
+    const withIds = stored.map((item: any, i: number) => ({
+      ...item,
+      id: item.id || Date.now().toString() + i,
+    }))
+    setItems(withIds)
+    setLoaded(true)
+  }, [])
+
+  // Save to localStorage whenever items change
+  useEffect(() => {
+    if (loaded) {
+      saveKnowledge(items)
+    }
+  }, [items, loaded])
   const [newItem, setNewItem] = useState({ type: 'product' as const, title: '', content: '' })
   const [showAdd, setShowAdd] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)

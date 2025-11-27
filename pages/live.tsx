@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Layout from '../components/Layout'
+import { getKnowledge } from '../lib/store'
+import { KnowledgeItem } from '../lib/expert'
 
 type Mode = 'directed' | 'interjection'
 type Status = 'idle' | 'listening' | 'thinking' | 'speaking'
@@ -17,69 +19,113 @@ export default function Live() {
   const [utterances, setUtterances] = useState<Utterance[]>([])
   const [currentTranscript, setCurrentTranscript] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [knowledge, setKnowledge] = useState<KnowledgeItem[]>([])
+  const [conversationHistory, setConversationHistory] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([])
 
   const recognitionRef = useRef<any>(null)
   const synthRef = useRef<SpeechSynthesis | null>(null)
+  const isLiveRef = useRef(isLive)
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    isLiveRef.current = isLive
+  }, [isLive])
+
+  // Load knowledge on mount
+  useEffect(() => {
+    setKnowledge(getKnowledge())
+  }, [])
 
   // Initialize speech synthesis
   useEffect(() => {
     if (typeof window !== 'undefined') {
       synthRef.current = window.speechSynthesis
+      // Load voices
+      window.speechSynthesis.getVoices()
     }
   }, [])
 
   const speak = useCallback((text: string) => {
     if (!synthRef.current) return
 
-    // Stop any current speech
     synthRef.current.cancel()
 
     const utterance = new SpeechSynthesisUtterance(text)
-    utterance.rate = 1.0
+    utterance.rate = 0.95
     utterance.pitch = 1.0
 
-    // Try to get a natural-sounding voice
     const voices = synthRef.current.getVoices()
     const preferredVoice = voices.find(v =>
       v.name.includes('Samantha') ||
-      v.name.includes('Alex') ||
-      v.name.includes('Google') ||
-      v.lang.startsWith('en')
+      v.name.includes('Karen') ||
+      v.name.includes('Daniel') ||
+      (v.name.includes('Google') && v.lang.startsWith('en')) ||
+      v.lang.startsWith('en-US')
     )
     if (preferredVoice) utterance.voice = preferredVoice
 
     utterance.onstart = () => setStatus('speaking')
     utterance.onend = () => {
       setStatus('listening')
-      // Resume recognition after speaking
-      if (recognitionRef.current && isLive) {
+      if (recognitionRef.current && isLiveRef.current) {
         try { recognitionRef.current.start() } catch (e) {}
       }
     }
 
     setStatus('speaking')
     synthRef.current.speak(utterance)
-  }, [isLive])
+  }, [])
 
-  const processUtterance = useCallback((transcript: string) => {
+  const callExpert = useCallback(async (question: string): Promise<string> => {
+    try {
+      const response = await fetch('/api/expert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: question,
+          knowledge,
+          context: { mode: 'live' },
+          conversationHistory,
+        }),
+      })
+
+      if (!response.ok) {
+        const err = await response.json()
+        throw new Error(err.error || 'Failed to get response')
+      }
+
+      const data = await response.json()
+
+      // Update conversation history
+      setConversationHistory(prev => [
+        ...prev,
+        { role: 'user', content: question },
+        { role: 'assistant', content: data.response },
+      ])
+
+      return data.response
+    } catch (err: any) {
+      console.error('Expert API error:', err)
+      return "I'm having trouble connecting right now. Give me a moment and try again."
+    }
+  }, [knowledge, conversationHistory])
+
+  const processUtterance = useCallback(async (transcript: string) => {
     const lower = transcript.toLowerCase().trim()
 
-    // Check for wake word in directed mode
-    const wakeWords = ['summit', 'summitiq', 'summit iq']
+    const wakeWords = ['summit', 'summitiq', 'summit iq', 'hey summit', 'ok summit']
     const hasWakeWord = wakeWords.some(w => lower.includes(w))
 
     if (mode === 'directed' && !hasWakeWord) {
-      // In directed mode, ignore if no wake word
       return
     }
 
-    // Extract the actual question (remove wake word)
+    // Extract the actual question
     let question = transcript
     wakeWords.forEach(w => {
       question = question.replace(new RegExp(w, 'gi'), '').trim()
     })
-    // Clean up common patterns
-    question = question.replace(/^[,\s]+/, '').replace(/^(can you |could you |please |tell us |what about )/i, '')
+    question = question.replace(/^[,\s]+/, '').replace(/^(can you |could you |please |tell us |what about |what's )/i, '')
 
     if (question.length < 3) return
 
@@ -92,23 +138,23 @@ export default function Live() {
 
     setStatus('thinking')
 
-    // Generate response (in production, this calls your AI backend)
-    const response = generateResponse(question, mode)
+    // Stop listening while processing
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop() } catch (e) {}
+    }
 
-    // Log and speak the response
+    // Get real AI response
+    const response = await callExpert(question)
+
+    // Log and speak
     setUtterances(prev => [...prev, {
       role: 'summit',
       content: response,
       timestamp: new Date()
     }])
 
-    // Stop listening while we speak
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop() } catch (e) {}
-    }
-
     speak(response)
-  }, [mode, speak])
+  }, [mode, callExpert, speak])
 
   const startListening = useCallback(() => {
     if (typeof window === 'undefined') return
@@ -116,7 +162,7 @@ export default function Live() {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
 
     if (!SpeechRecognition) {
-      setError('Speech recognition not supported in this browser. Try Chrome.')
+      setError('Speech recognition not supported in this browser. Try Chrome on desktop.')
       return
     }
 
@@ -152,34 +198,39 @@ export default function Live() {
     }
 
     recognition.onerror = (event: any) => {
-      if (event.error === 'no-speech') {
-        // This is fine, just no speech detected
+      if (event.error === 'no-speech' || event.error === 'aborted') {
         return
       }
       console.error('Speech recognition error:', event.error)
       if (event.error === 'not-allowed') {
-        setError('Microphone access denied. Please allow microphone access.')
+        setError('Microphone access denied. Please allow microphone access and reload.')
       }
     }
 
     recognition.onend = () => {
-      // Restart if we're still live and not speaking
-      if (isLive && status !== 'speaking') {
-        try { recognition.start() } catch (e) {}
+      if (isLiveRef.current) {
+        setTimeout(() => {
+          if (isLiveRef.current && recognitionRef.current) {
+            try { recognitionRef.current.start() } catch (e) {}
+          }
+        }, 100)
       }
     }
 
     recognitionRef.current = recognition
     recognition.start()
-  }, [isLive, status, processUtterance])
+  }, [processUtterance])
 
   const goLive = () => {
+    // Reload knowledge in case it changed
+    setKnowledge(getKnowledge())
+    setConversationHistory([])
     setIsLive(true)
     setUtterances([{
       role: 'system',
       content: mode === 'directed'
-        ? 'Listening. Say "Summit" followed by your question.'
-        : 'Listening to the conversation. I\'ll jump in when I can help.',
+        ? 'Ready. Say "Summit" followed by your question.'
+        : 'Listening. I\'ll help when I can.',
       timestamp: new Date()
     }])
     startListening()
@@ -189,24 +240,24 @@ export default function Live() {
     setIsLive(false)
     setStatus('idle')
     if (recognitionRef.current) {
-      recognitionRef.current.stop()
+      try { recognitionRef.current.stop() } catch (e) {}
       recognitionRef.current = null
     }
     if (synthRef.current) {
       synthRef.current.cancel()
     }
+    const questionCount = utterances.filter(u => u.role === 'customer').length
     setUtterances(prev => [...prev, {
       role: 'system',
-      content: 'Session ended.',
+      content: `Session ended. ${questionCount} question${questionCount !== 1 ? 's' : ''} answered.`,
       timestamp: new Date()
     }])
   }
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (recognitionRef.current) {
-        recognitionRef.current.stop()
+        try { recognitionRef.current.stop() } catch (e) {}
       }
       if (synthRef.current) {
         synthRef.current.cancel()
@@ -218,13 +269,13 @@ export default function Live() {
     idle: 'bg-white/20',
     listening: 'bg-green-500',
     thinking: 'bg-mustard animate-pulse',
-    speaking: 'bg-blue-500 animate-pulse'
+    speaking: 'bg-mustard'
   }
 
   const statusText = {
     idle: 'Ready',
     listening: 'Listening',
-    thinking: 'Thinking...',
+    thinking: 'Thinking',
     speaking: 'Speaking'
   }
 
@@ -272,6 +323,13 @@ export default function Live() {
               </div>
             </div>
 
+            {knowledge.length === 0 && (
+              <div className="bg-mustard/10 border border-mustard/30 px-4 py-3 mb-6 text-sm">
+                <strong>No knowledge loaded.</strong> Summit will give general guidance.{' '}
+                <a href="/knowledge" className="text-mustard underline">Add your products and playbooks</a> for specific expertise.
+              </div>
+            )}
+
             {error && (
               <div className="bg-red-500/20 border border-red-500/40 text-red-200 px-4 py-3 mb-6">
                 {error}
@@ -285,35 +343,32 @@ export default function Live() {
             <div className="card bg-transparent border-dashed mt-6">
               <h3 className="font-medium mb-3">Introducing Summit</h3>
               <p className="text-white/60 text-sm">
-                Keep it natural. Something like: "I've got our product specialist on the line with us —
-                feel free to ask them anything technical." Then just set your phone down and go.
+                Keep it natural. Something like: "I've got our product specialist on the line —
+                feel free to ask them anything technical." Then set your phone down and go.
               </p>
             </div>
           </>
         ) : (
           <div className="flex flex-col h-[calc(100vh-180px)]">
-            {/* Status bar */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className={`w-3 h-3 rounded-full ${statusColors[status]}`} />
                 <span className="text-lg font-medium">{statusText[status]}</span>
                 <span className="text-white/40 text-sm">
-                  {mode === 'directed' ? '(say "Summit" to ask)' : '(listening to conversation)'}
+                  {mode === 'directed' ? '(say "Summit" to ask)' : '(listening)'}
                 </span>
               </div>
               <button onClick={endSession} className="btn-secondary text-sm">
-                End Session
+                End
               </button>
             </div>
 
-            {/* Current transcript */}
             {currentTranscript && (
               <div className="bg-white/5 border border-white/10 px-4 py-2 mb-4 text-white/60 italic">
                 {currentTranscript}...
               </div>
             )}
 
-            {/* Conversation log */}
             <div className="flex-1 overflow-y-auto space-y-3 mb-4">
               {utterances.map((u, i) => (
                 <div
@@ -336,7 +391,6 @@ export default function Live() {
               ))}
             </div>
 
-            {/* Large visual indicator for table view - minimal, professional */}
             <div className="flex items-center justify-center py-8">
               <div className={`w-32 h-32 rounded-full ${statusColors[status]} flex items-center justify-center transition-all duration-300`}>
                 <span className="text-black font-semibold uppercase tracking-wide text-sm">
@@ -349,37 +403,4 @@ export default function Live() {
       </div>
     </Layout>
   )
-}
-
-// Response generation - in production this calls your AI backend with full knowledge base
-function generateResponse(question: string, mode: Mode): string {
-  const lower = question.toLowerCase()
-
-  // Product-specific responses (demo - would come from knowledge base)
-  if (lower.includes('anchovy') || lower.includes('paste')) {
-    return "Anchovy paste is one of those secret weapons in professional kitchens. It adds deep umami without tasting fishy when used correctly. Start with half a teaspoon per serving in sauces, dressings, or braises. It dissolves completely and just makes everything taste more savory. Great for Caesar dressing, pasta puttanesca, or anywhere you want depth without people knowing why it tastes so good."
-  }
-
-  if (lower.includes('gluten') || lower.includes('flour') || lower.includes('protein')) {
-    return "Protein content in flour determines structure. Higher protein, like 13 to 14 percent, gives you more gluten development — that's what you want for chewy breads, bagels, pizza with good chew. Lower protein, around 8 to 10 percent, keeps things tender — better for cakes, pastries, biscuits. Match the flour to what you're making."
-  }
-
-  if (lower.includes('price') || lower.includes('cost') || lower.includes('expensive')) {
-    return "Fair question on price. Here's how I'd think about it: what's the cost of inconsistency? A bad batch on a busy night, a customer complaint, having to comp a meal. Our customers find that the reliability pays for itself. But I'd suggest trying a sample batch in your kitchen first — see the difference yourself, then decide."
-  }
-
-  if (lower.includes('competitor') || lower.includes('other') || lower.includes('alternative') || lower.includes('compare')) {
-    return "There are good options out there. Where we tend to win is on consistency batch to batch and technical support when you need it. But honestly, the best test is your kitchen. Let's get you a sample and you can compare side by side with what you're using now."
-  }
-
-  if (lower.includes('menu') || lower.includes('application') || lower.includes('use')) {
-    return "That really depends on your menu and what you're trying to achieve. Tell me more about what dishes you're thinking about, and I can give you specific recommendations on applications and techniques."
-  }
-
-  if (lower.includes('hello') || lower.includes('hi ') || lower.includes('hey')) {
-    return "Hello! I'm Summit, here to help with any product questions. Feel free to ask about specs, applications, or anything else — that's what I'm here for."
-  }
-
-  // Default response
-  return "That's a good question. Let me give you the specific details on that — could you tell me a bit more about what you're trying to accomplish? That'll help me give you the most relevant answer."
 }
